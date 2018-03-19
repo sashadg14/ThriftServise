@@ -14,7 +14,7 @@ public class Main2 {
             transport.open();
             TProtocol protocol = new TBinaryProtocol(transport);
             JsReferenceService.Client client = new JsReferenceService.Client(protocol);
-            System.out.println(client.getSections());
+            System.out.println(client.getJsRefferense().sectionsList);
             transport.close();
         } catch (TTransportException e) {
             e.printStackTrace();

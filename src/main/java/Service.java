@@ -1,5 +1,5 @@
 import org.apache.thrift.TException;
-import servise.JsReferenceService;
+import servise.*;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -9,18 +9,32 @@ import java.util.Objects;
 public class Service implements JsReferenceService.Iface {
 
     String PATH="C:\\Users\\Alex\\IdeaProjects\\SOAP_GUI_APP\\JsReference";
-    public List<String> getSections(){
+
+    @Override
+    public JsRefference getJsRefferense() throws TException {
+        return new JsRefference(getSections(),new Author("Alex","Mamayko","Artificial Intelligence"));
+    }
+
+    public List<Section> getSections(){
+        List<Section> sectionList = new ArrayList<>();
+        File mainDir = new File(PATH);
+        for (File file : Objects.requireNonNull(mainDir.listFiles())) {
+            sectionList.add(new Section(file.getName(),getSubsectionsList(file.getName())));
+        }
+        return sectionList;
+    }
+    private List<String> getSectionsStr() {
         List<String> sectionList = new ArrayList<>();
         File mainDir = new File(PATH);
-        for (File file : Objects.requireNonNull(mainDir.listFiles()))
+        for (File file : mainDir.listFiles())
             sectionList.add(file.getName());
         return sectionList;
     }
 
-    public List<String> getSubsections(String sectionName) {
+    private List<String> getSubsectionsList(String sectionName){
         List<String> strings = new ArrayList<>();
-        for (String str : getSections())
-            if (str.equals(sectionName)) {
+        for (String section : getSectionsStr())
+            if (section.equals(sectionName)) {
                 File file = new File(PATH+"\\" + sectionName);
                 for (File file1 : Objects.requireNonNull(file.listFiles())) {
                     strings.add(file1.getName());
@@ -28,8 +42,8 @@ public class Service implements JsReferenceService.Iface {
             }
         return strings;
     }
-
-    public String getSubsectionInfo(String sectionName, String subsectionName){
+    @Override
+    public Subsection getSubsection(String sectionName, String subsectionName) throws TException {
         StringBuilder stringBuilder = new StringBuilder();
         try {
             File file = new File(PATH + "\\" + sectionName + "\\" + subsectionName);
@@ -44,7 +58,7 @@ public class Service implements JsReferenceService.Iface {
         } catch (IOException e){
             System.out.println("Error");
         }
-        return stringBuilder.toString();
+        return new Subsection(sectionName,stringBuilder.toString());
     }
 
     public void deleteSubsection(String sectionName, String subsectionName){
@@ -52,20 +66,22 @@ public class Service implements JsReferenceService.Iface {
         file.delete();
     }
 
-    public void setInfoInSubsection(String sectionName, String subsectionName, String newText){
-        File file = new File(PATH+"\\" + sectionName + "\\" + subsectionName);
+    @Override
+    public void updateSubsection(String sectionName, Subsection subsection) throws TException {
+        File file = new File(PATH+"\\" + sectionName + "\\" + subsection.getName());
         PrintWriter printWriter = null;
         try {
             printWriter = new PrintWriter(file);
         } catch (FileNotFoundException e) {
             System.out.println("Error");
         }
-        printWriter.print(newText);
+        printWriter.print(subsection.getInfo());
         printWriter.close();
     }
 
-    public void addSubsection(String sectionName, String subsectionName){
-        File file = new File(PATH+"\\" + sectionName + "\\" + subsectionName);
+    @Override
+    public void addSubsection(String sectionName, Subsection subsection) throws TException {
+        File file = new File(PATH+"\\" + sectionName + "\\" + subsection.getName());
         try {
             file.createNewFile();
         } catch (IOException e) {
@@ -73,8 +89,12 @@ public class Service implements JsReferenceService.Iface {
         }
     }
 
-    public void addSection(String sectionName) {
-        File file = new File(PATH+"\\" + sectionName);
+    @Override
+    public void addSection(Section section) throws TException {
+        File file = new File(PATH+"\\" + section.getName());
+        System.out.println(file.getPath());
         file.mkdir();
     }
+
+
 }
